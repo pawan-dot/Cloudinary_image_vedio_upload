@@ -1,60 +1,41 @@
 const Product = require("../models/product");
 const catchAsyncErrors = require("../middlewares/catchAsyncErrors.js");
 const cloudinary = require("cloudinary");
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-})
-
-
-exports.addPhoto = async (req, res) => {
-    // if(!req.user){
-    //     return res.status(400).json({message:"User not found"})
-    // }
-    try {
-        const pic = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'document' })
-        return res.json({ status: "OK", data: pic })
-    } catch (err) {
-        console.log(err)
-        res.status(500).json({ message: "Error uploading...." })
-    }
-};
+// exports.addPhoto = async (req, res) => {
+//     // if(!req.user){
+//     //     return res.status(400).json({message:"User not found"})
+//     // }
+//     try {
+//         const pic = await cloudinary.v2.uploader.upload(req.file.path, { folder: 'document' })
+//         return res.json({ status: "OK", data: pic })
+//     } catch (err) {
+//         console.log(err)
+//         res.status(500).json({ message: "Error uploading...." })
+//     }
+// };
 
 // 1.Create Product
 exports.createProduct = catchAsyncErrors(async (req, res, next) => {
-    const files = JSON.parse(JSON.stringify(req.files.images));
-    // console.log(files)
-    const myCloud = await cloudinary.v2.uploader.upload(files.tempFilePath, {
+    const files = req.files.image;
+
+    const myCloud = await cloudinary.uploader.upload(files.tempFilePath, {
         folder: "image",
-        width: 150,
-        crop: "scale"
-    });
+    },
+        function (error, result) { (result, error) });
 
 
-    // cloudinary.v2.uploader.upload("../photo/12639280.jpg", (err, result) => {
-    //     console.log(result)
 
-    // }).then((result) => {
-    //     console.log("success", JSON.stringify(result, null, 2))
-    // }).catch((error) => {
-    //     console.log("error", JSON.stringify(error, null, 2))
-    // })
     const video = req.files.video;
 
-    const myCloudVedio = await cloudinary.v2.uploader.upload(video, {
+    const myCloudVedio = await cloudinary.v2.uploader.upload(video.tempFilePath, {
         resource_type: "video",
-        public_id: "myVideo/video",
+        folder: "video",
         chunk_size: 6000000,
-        eager: [
-            { width: 300, height: 300, crop: "pad", audio_codec: "none" },
-            { width: 160, height: 100, crop: "crop", gravity: "south", audio_codec: "none" }],
-        eager_async: true,
-        eager_notification_url: "https://mysite.example.com/notify_endpoint"
+
     },
-        function (error, result) { console.log(result, error) });
+        function (error, result) { (result, error) });
 
-
+    const { title } = req.body;
 
     const product = await Product.create({
         title,
@@ -79,3 +60,38 @@ exports.createProduct = catchAsyncErrors(async (req, res, next) => {
     });
 });
 
+//2.get All product
+exports.getAllProducts = async (req, res) => {
+
+    try {
+        const product = await Product.find();
+
+
+        res.status(200).json({
+            success: true,
+            product,
+        });
+    } catch (error) {
+        res.send(error)
+
+    }
+
+}
+
+//3.get one product
+
+exports.getOneProduct = catchAsyncErrors(async (req, res, next) => {
+
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+        res.status(404).json({
+            msg: "Product not found",
+        })
+    }
+    res.status(200).json({
+        success: true,
+        product,
+
+    });
+
+})

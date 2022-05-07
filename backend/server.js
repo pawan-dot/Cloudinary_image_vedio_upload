@@ -3,7 +3,7 @@ const app = require("./app");
 const cloudinary = require("cloudinary");
 const connectDatabase = require("./database/db");
 
-const port = 5000;
+const PORT = process.env.PORT || 5000;
 
 // Handling Uncaught Exception like console.log(you tube) we not define you tube
 process.on("uncaughtException", (err) => {
@@ -23,11 +23,11 @@ cloudinary.config({
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-//console.log(process.env.CLOUDINARY_NAME)
 
 
-const server = app.listen(port, () => {
-    console.log(`Server  is working on http://localhost:${port}`);
+
+const server = app.listen(PORT, () => {
+    console.log(`Server  is working on http://localhost:${PORT}`);
 });
 
 
